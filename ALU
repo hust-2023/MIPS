@@ -1,0 +1,55 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2025/03/16 16:56:12
+// Design Name: 
+// Module Name: ALU
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+    module ALU(
+    input [31:0] input1,
+    input [31:0] input2,
+    input [3:0] aluCtr,
+    output reg [31:0] aluRes,
+    output reg zero
+    );
+
+    always @(*) begin
+        zero = 0; // 默认赋值，避免锁存器
+        case(aluCtr)
+            4'b0001: begin // 加
+                aluRes = input1 + input2;
+            end
+            4'b0010: begin // 减
+                aluRes = input1 - input2;
+                zero = (aluRes == 0) ? 1 : 0;
+            end
+            4'b0011: begin // 与 (AND)
+                aluRes = input1 & input2;
+            end
+            4'b0100: begin // 或 (OR)
+                aluRes = input1 | input2;
+            end
+            4'b0101: begin // 小于 (SLT)
+                aluRes = (input1 < input2) ? 32'b1 : 32'b0;
+            end
+            default: begin
+                aluRes = 32'b0;
+            end
+        endcase
+    end
+endmodule
