@@ -1,0 +1,33 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2025/04/23 16:44:23
+// Design Name: 
+// Module Name: iRom
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module iRom(
+    input [4:0] addr,
+    output [31:0] instr
+    );
+    reg [31:0] regs [0:31];
+
+    assign instr = regs [addr];
+    initial
+//    $readmemh("C:/Users/19740/Desktop/mips_irom.txt",regs,0,13);
+    $readmemh("C:/Users/19740/Desktop/mips_addi_ori.txt",regs,0,13);
+endmodule
