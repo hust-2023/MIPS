@@ -1,0 +1,44 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2025/04/21 23:36:04
+// Design Name: 
+// Module Name: DRAM
+// Description: 数据存储器模块，包含初始化、异步读、同步写
+//////////////////////////////////////////////////////////////////////////////////
+
+module DRAM (
+    input wire clk,              // 时钟
+    input wire we,               // 写使能（1=写，0=读）
+    input wire [4:0] a,          // 地址（最多支持32个word）
+    input wire [31:0] d,         // 写入数据
+    output reg [31:0] spo        // 读取数据
+);
+
+    // 定义 64 个 32 位 word 的内存空间（共 256 字节）
+    reg [31:0] mem [0:31];  // 0~63 地址范围
+
+    integer i;
+
+    // 初始化为 0x55555555
+    initial begin
+        for (i = 0; i < 64; i = i + 1) begin
+            mem[i] = i;
+        end
+    end
+
+    // 写入操作：在时钟下降沿进行
+    always @(negedge clk) begin
+        if (we) begin
+            mem[a] <= d;
+        end
+    end
+
+    // 读取操作：异步
+    always @(*) begin
+        spo = mem[a];
+    end
+
+endmodule
