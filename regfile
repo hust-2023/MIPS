@@ -1,0 +1,58 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2025/03/16 16:31:02
+// Design Name: 
+// Module Name: regFile
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module regFile(
+    input clk,
+    input reset,
+    input regWriteEn,
+    input [31:0] regWriteData,
+    input [4:0] RsAddr,
+    input [4:0] RtAddr,
+    input [4:0] regWriteAddr,
+    output [31:0] RsData,
+    output [31:0] RtData
+    );
+ //   reg[31:0] regs [0：31]; // 定义 32 个 32 位寄存器
+     reg [31:0] regs [0:31];
+    assign RsData = (RsAddr == 5'b0) ? 32'b0 : regs[RsAddr];
+    assign RtData = (RtAddr == 5'b0) ? 32'b0 : regs[RtAddr];
+    integer i_reg;
+    
+    always @ (negedge clk)
+    begin
+        if(!reset)
+            begin
+                for(i_reg = 0;i_reg < 32;i_reg = i_reg + 1)
+                    begin
+                        regs[i_reg] = i_reg*4;//初始赋值，值=序号
+                    end
+                i_reg = 0;
+            end
+        else
+            begin
+                if(regWriteEn == 1)//允许写入
+                    begin
+                        regs[regWriteAddr] = regWriteData;
+                    end
+            end
+    end
+endmodule
