@@ -1,0 +1,150 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2025/04/22 22:46:55
+// Design Name: 
+// Module Name: top
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module top(
+    input clk,
+    input reset,
+    output rrrr
+);
+
+reg [31:0] instr;
+wire [31:0] pAddr;
+
+//PC模块 
+wire jump, branch, zero;
+//reg instr_pc_in;
+//always @(posedge clk) begin
+//    instr_pc_in <= rom_out;
+//end
+PC pc_inst (
+    .clkin(clk),
+    .reset(reset),
+    .instr(instr),
+    .jump(jump),
+    .branch(branch),
+    .zero(zero),
+    .pAddr(pAddr)
+);
+
+//指令存储器 
+wire [31:0] rom_out;
+
+//InstrROM instr_rom (
+//    .a(pAddr[8:2]),
+//    .d(32'b0),
+//    .clk(clk),
+//    .we(1'b0),
+//    .qspo(rom_out)
+//);
+
+iRom instr_rom(
+ .addr(pAddr[6:2]),
+ .instr(rom_out)
+);
+always @(posedge clk) begin
+    instr <= rom_out;
+end
+
+//reg [4:0] irom_addr;
+//always @(posedge clk) begin
+//    irom_addr <= pAddr[6:2];  // 时序对齐
+//    instr <= rom_out;
+//end
+
+//iRom instr_rom(
+// .addr(irom_addr),
+// .instr(rom_out)
+//);
+
+//控制器 
+wire regDst, aluSrc, memToReg, regWrite, memRead, memWrite;
+wire [3:0] aluCtr;
+
+ctr ctrl (
+    .instr(instr),
+    .regDst(regDst),
+    .aluSrc(aluSrc),
+    .memToReg(memToReg),
+    .regWrite(regWrite),
+    .memRead(memRead),
+    .memWrite(memWrite),
+    .jump(jump),
+    .branch(branch),
+    .ALUop(aluCtr)
+);
+
+// 解码指令
+wire [4:0] rs = instr[25:21];
+wire [4:0] rt = instr[20:16];
+wire [4:0] rd = instr[15:11];
+wire [15:0] imm = instr[15:0];
+wire [31:0] signExtImm = {{16{imm[15]}}, imm};//符号扩展
+
+wire [4:0] regWriteAddr = regDst ? rd : rt;
+wire [31:0] aluInput2;
+assign aluInput2 = aluSrc ? signExtImm : rtData;
+
+// ========== 寄存器文件 ==========
+wire [31:0] rsData, rtData, regWriteData;
+
+regFile reg_file (
+    .clk(clk),
+    .reset(reset),
+    .regWriteEn(regWrite && ~clk),
+    .regWriteData(regWriteData),
+    .RsAddr(rs),
+    .RtAddr(rt),
+    .regWriteAddr(regWriteAddr),
+    .RsData(rsData),
+    .RtData(rtData)
+);
+
+//ALU 
+wire [31:0] aluRes;
+
+ALU alu (
+    .input1(rsData),
+    .input2(aluInput2),
+    .aluCtr(aluCtr),
+    .aluRes(aluRes),
+    .zero(zero)
+);
+
+//数据存储器 
+wire [31:0] memDataOut;
+
+DRAM data_mem (
+    .clk(clk),
+    .we(memWrite && ~clk),
+    .a(aluRes[4:0]),
+    .d(rtData),
+    .spo(memDataOut)
+);
+//选择器
+//select_5 MUX5_1(
+//    .in1(instr[15:11]),
+//    .in2(instr[20:16]),
+//    .sel(regDst),
+//    .out(RdAdd));
+assign regWriteData = memToReg ? memDataOut : aluRes;
+
+endmodule
